@@ -17,7 +17,7 @@ questions.
    method: GET G
    response:
 
-<!-- Questions List Response -->
+```
 <questions>
 <question name="full_name" type="short_text" required="yes">
 <text>What is your full name?</text>
@@ -63,10 +63,15 @@ questions.
 <file_properties format=".pdf" max_file_size="1" max_file_size_unit="mb" multiple="yes"/>
 </question>
 </questions>
+
+```
+
 2. To submit responses to the questions
 url: /api/questions/responses
 method: PUT P
 response:
+
+```
 <question_response>
 <full_name>Jane Doe</full_name>
 <email_address>janedoe@gmail.com</email_address>
@@ -80,12 +85,16 @@ response:
 <date_responded>2023-09-23 12:30:12</date_responded>
 </question_response>
 
+```
+
 The API should support uploading of files through use of form-data f .
 3. To fetch submitted responses to the questions
 url: /api/questions/responses
 method: GET G
 
 response:
+
+```
 <question_responses current_page="1" last_page="1" page_size="10" total_count="2">
 <question_response>
 <response_id>1</response_id>
@@ -115,6 +124,7 @@ response:
 </question_response>
 </question_responses>
 
+```
 The API should support:
 pagination of the records.
 filtering of the responses based on email_address e
