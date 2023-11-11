@@ -16,6 +16,8 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+from rest_framework_xml.renderers import XMLRenderer
+from rest_framework.pagination import PageNumberPagination
 
 
 #render react app template
@@ -128,15 +130,33 @@ class QuestionList(generics.ListCreateAPIView):
             serialized_question = {
                 "text": question.text,
                 "description": question.description,
+                "type": question.type,
+                "name": question.name,
+                "required": question.required,
             }
 
             if question.type == "choice":
                 options = Option.objects.filter(question=question)
-                serialized_options = {"option": [option.text for option in options]}
+                serialized_options = {"option": [{"value": option.value, "text": option.text} for option in options]}
+               
+               # Check if there are multiple choices
                 serialized_question["options"] = serialized_options
+                if options.exists():
+                    serialized_options["multiple"] = options.first().multiple
+                else:
+                    serialized_options["multiple"] = False
+                    
             elif question.type == "file":
                 file_properties = FileProperty.objects.filter(question=question)
-                serialized_question["file_properties"] = ""  
+
+                # Check if file properties exist
+                if file_properties.exists():
+                    # Assuming there is only one file property for simplicity
+                    first_file_property = file_properties.first()
+                    serialized_question["file_properties_format"] = first_file_property.format
+                    serialized_question["file_properties_max_file_size"] = first_file_property.max_file_size
+                    serialized_question["file_properties_max_file_size_unit"] = first_file_property.max_file_size_unit
+                    serialized_question["file_properties_multiple"] = first_file_property.multiple
 
             serialized_questions.append(serialized_question)
 
@@ -167,13 +187,60 @@ def download_certificate(request, certificate_id):
 
 
 
+class CustomPageNumberPagination(PageNumberPagination):
+    page_size = 10
+
+
 class QuestionResponseView(generics.ListCreateAPIView):
     serializer_class = QuestionResponseSerializer
-    certificate_class=CertificateSerializer
-    
+    certificate_class = CertificateSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['email_address']
     ordering_fields = '__all__'
+    pagination_class = CustomPageNumberPagination
+
+    def get(self, request, *args, **kwargs):
+        self.paginator.page_size = 10  # Set the page size
+
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Use pagination to get the current page
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            xml_data = XMLRenderer().render(serializer.data)
+
+            # Parse the XML data
+            root = ET.fromstring(xml_data)
+
+            # Change the root element name
+            root.tag = 'question_responses'
+
+            # Add attributes to the root element
+            root.set('current_page', str(self.paginator.page.number))
+            root.set('last_page', str(self.paginator.page.paginator.num_pages))
+            root.set('page_size', str(self.paginator.page_size))
+            root.set('total_count', str(self.paginator.page.paginator.count))
+
+            # Change the list item element names
+            for list_item in root.findall('.//list-item'):
+                list_item.tag = 'question_response'
+
+            # Convert the modified ElementTree object back to XML string
+            modified_xml_data = ET.tostring(root, encoding='utf-8').decode('utf-8')
+
+            return HttpResponse(modified_xml_data, content_type='application/xml')
+
+    def get_queryset(self):
+        # Get the email_address from the request
+        email_address = self.request.query_params.get('email_address', None)
+
+        # Filter queryset based on email_address
+        queryset = QuestionResponse.objects.all()
+        if email_address:
+            queryset = queryset.filter(email_address=email_address)
+
+        return queryset
 
     def put(self, request, *args, **kwargs):
         email = request.data.get('email_address')
@@ -200,6 +267,7 @@ class QuestionResponseView(generics.ListCreateAPIView):
                     certificate.save()
                     certificates_data.append({'name': certificate.name})
 
+                template = loader.get_template('user_response.xml')
                 context = {
                     'full_name': question_response.full_name,
                     'email_address': question_response.email_address,
@@ -209,9 +277,9 @@ class QuestionResponseView(generics.ListCreateAPIView):
                     'certificates': certificates_data,
                     'date_responded': question_response.date_responded,
                 }
+                rendered_data = template.render(context)
 
-                xml_response = render(request, 'user_response.xml', context, content_type='application/xml')
-                return Response(xml_response.content, content_type='application/xml')
+                return HttpResponse(rendered_data, content_type='application/xml')
             else:
                 return Response(
                     {"message": "Invalid data.", "errors": certificate_serializer.errors},

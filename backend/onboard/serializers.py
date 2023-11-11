@@ -1,7 +1,10 @@
 from rest_framework import serializers
 from .models import *
 from rest_framework.renderers import JSONRenderer
-from rest_framework.utils.serializer_helpers import ReturnDict
+from rest_framework.renderers import BaseRenderer
+from django.http import HttpResponse
+from xml.etree.ElementTree import Element, SubElement, tostring
+from xml.dom import minidom
 
 class FilePropertySerializer(serializers.ModelSerializer):
     class Meta:
@@ -124,3 +127,5 @@ class QuestionResponseSerializer(serializers.ModelSerializer):
 class CustomJSONRenderer(JSONRenderer):
     def render(self, data, accepted_media_type, renderer_context):
         return super().render(data, accepted_media_type, renderer_context)
+    
+    

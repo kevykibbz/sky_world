@@ -1,8 +1,9 @@
 from pathlib import Path
 import os
 import dj_database_url
-from decouple import config, Csv
+from dotenv import load_dotenv
 
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -11,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY =config('SECRET_KEY')
+SECRET_KEY =os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -61,6 +62,7 @@ REST_FRAMEWORK = {
         # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
         'rest_framework.renderers.JSONRenderer',
         'rest_framework_xml.renderers.XMLRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer'
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,  # Set the default page size to 10
@@ -88,7 +90,7 @@ WSGI_APPLICATION = 'sky_world.wsgi.application'
 
 
 DATABASES = {
-    'default': dj_database_url.config(default=config('DATABASE_URL'))
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -160,7 +162,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 if DEBUG:
-    STATICFILES_DIRS=[os.path.join(BASE_DIR,'static'),os.path.join(BASE_DIR,'frontend/build/static'),os.path.join(BASE_DIR,'frontend/build/assets')]
+    STATICFILES_DIRS=[os.path.join(BASE_DIR,'static'),os.path.join(BASE_DIR,'frontend/build/static')]
 else:
     STATIC_ROOT=os.path.join(BASE_DIR,'frontend/build/static')
 
@@ -177,7 +179,7 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         #"LOCATION": os.environ.get('REDIS_URL','redis-12648.c263.us-east-1-2.ec2.cloud.redislabs.com:12648'),
-        "LOCATION":config('REDIS_URL'),
+        "LOCATION":os.getenv('REDIS_URL'),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
