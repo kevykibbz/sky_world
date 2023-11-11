@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<question_responses current_page="{{ current_page }}" last_page="{{ last_page }}" page_size="{{ page_size }}" total_count="{{ total_count }}">
+    {% for response in responses %}
+    <question_response>
+        <response_id>{{ response.id }}</response_id>
+        <full_name>{{ response.full_name }}</full_name>
+        <email_address>{{ response.email_address }}</email_address>
+        <description>{{ response.description }}</description>
+        <gender>{{ response.gender }}</gender>
+        <programming_stack>{{ response.programming_stack }}</programming_stack>
+        <certificates>
+            {% for certificate in response.certificates.all %}
+            <certificate id="{{ certificate.id }}">{{ certificate.name }}</certificate>
+            {% endfor %}
+        </certificates>
+        <date_responded>{{ response.date_responded }}</date_responded>
+    </question_response>
+    {% endfor %}
+</question_responses>

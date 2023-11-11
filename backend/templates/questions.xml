@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<questions>
+  {% for question in response_data.questions.question %}
+    <question>
+      <text>{{ question.text }}</text>
+      <description>{{ question.description }}</description>
+      {% if question.options %}
+        <options>
+          {% for option in question.options.option %}
+            <option>{{ option }}</option>
+          {% endfor %}
+        </options>
+      {% endif %}
+      {% if question.file_properties %}
+        <file_properties>{{ question.file_properties }}</file_properties>
+      {% endif %}
+    </question>
+  {% endfor %}
+</questions>

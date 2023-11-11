@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<question_response>
+    <full_name>{{ full_name }}</full_name>
+    <email_address>{{ email_address }}</email_address>
+    <description>{{ description }}</description>
+    <gender>{{ gender }}</gender>
+    <programming_stack>{{ programming_stack|upper }}</programming_stack>
+    <certificates>
+        {% for certificate in certificates %}
+        <certificate>{{ certificate.name }}</certificate>
+        {% endfor %}
+    </certificates>
+    <date_responded>{{ date_responded }}</date_responded>
+</question_response>
