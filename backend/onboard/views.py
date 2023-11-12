@@ -4,20 +4,20 @@ from .models import *
 from .serializers import *
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import action
 from .serializers import OptionSerializer, QuestionSerializer
 from rest_framework.permissions import AllowAny
 from django.http import HttpResponse
 from django.template import loader
 from rest_framework.views import APIView
 from xml.etree import ElementTree as ET
-from rest_framework import pagination
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework_xml.renderers import XMLRenderer
 from rest_framework.pagination import PageNumberPagination
+from django.http import JsonResponse, HttpResponseNotFound
+from django.core.serializers import serialize
 
 
 #render react app template
@@ -174,19 +174,38 @@ class QuestionList(generics.ListCreateAPIView):
 
 
 def download_certificate(request, certificate_id):
-    certificate = get_object_or_404(Certificate, pk=certificate_id)
-    
-    # Set the content type of the response to force the file download
-    response = FileResponse(certificate.certificate, content_type='application/pdf')
-    
-    # Set the Content-Disposition header to specify the filename
-    response['Content-Disposition'] = f'attachment; filename="{certificate.name}"'
-    
-    return response
+    if request.method == 'GET':
+        certificate = get_object_or_404(Certificate, pk=certificate_id)
+        
+        # Set the content type of the response to force the file download
+        response = FileResponse(certificate.certificate, content_type='application/pdf')
+        
+        # Set the Content-Disposition header to specify the filename
+        response['Content-Disposition'] = f'attachment; filename="{certificate.name}"'
+        
+        return response
 
 
 
 
+class UserCertificateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Certificate
+        fields = ['id', 'name']
+        
+def get_certificate(request, question_response_id):
+    if request.method == 'GET':
+        try:
+            certificates = Certificate.objects.filter(user_id=question_response_id)
+            serializer = UserCertificateSerializer(certificates, many=True)
+            return JsonResponse(serializer.data, safe=False)
+        except Certificate.DoesNotExist:
+            return HttpResponseNotFound("Certificate not found")
+            
+  
+  
+  
+        
 class CustomPageNumberPagination(PageNumberPagination):
     page_size = 10
 
@@ -226,6 +245,18 @@ class QuestionResponseView(generics.ListCreateAPIView):
             for list_item in root.findall('.//list-item'):
                 list_item.tag = 'question_response'
 
+            # Include certificates
+            for question_response_elem in root.findall('.//question_response'):
+                question_id_elem = question_response_elem.find('id')
+                if question_id_elem is not None:
+                    question_id = question_id_elem.text
+                    certificates_qs = Certificate.objects.filter(user=question_id)
+                    certificates_elem = ET.SubElement(question_response_elem, 'certificates')
+
+                    for certificate in certificates_qs:
+                        certificate_elem = ET.SubElement(certificates_elem, 'certificate', id=str(certificate.id))
+                        certificate_elem.text = certificate.name
+                        
             # Convert the modified ElementTree object back to XML string
             modified_xml_data = ET.tostring(root, encoding='utf-8').decode('utf-8')
 
@@ -240,6 +271,8 @@ class QuestionResponseView(generics.ListCreateAPIView):
         if email_address:
             queryset = queryset.filter(email_address=email_address)
 
+        # If you want to filter certificates based on QuestionResponse ID
+        queryset = queryset.prefetch_related('certificates')        
         return queryset
 
     def put(self, request, *args, **kwargs):

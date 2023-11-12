@@ -8,5 +8,5 @@ urlpatterns = [
     path('questions/responses', views.QuestionResponseView.as_view(), name='question-response'),
     path('questions/responses/certificates/<int:certificate_id>', views.download_certificate, name='download_certificate'),
     path('options', views.OptionsView.as_view(), name='options-list'),
-
+    path('questions/certificates/<int:question_response_id>', views.get_certificate, name='get_certificate'),
 ]
