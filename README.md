@@ -141,11 +141,40 @@ For web & backend developers w , use your preferred web development languages or
 The User Interface should have two pages:
 1. Survey Form S
 2. Survey Responses S
+
+
 1. Survey Form 1
+
 The page will have the form through which users can respond to the questions.
+The page will have the form through which users can respond to the questions.
+Requirements R
+1. The form should be a stepped form;with question as a step.
+2. The list of questions should be fetched by making a request to the Endpoint 1 E in the REST API R section above
+3. The form should have Next N and Previous P button to navigate through each question.
+4. On the first question, the Previous P button should be hidden
+5. For questions with required - yes y , ensure the user provides a response before proceeding to the next question
+6. The final step should have a preview of all the collected data and a Submit S button to submit the collected data.
+7. On clicking the Submit button, the responses should be submitted to the database via the Endpoint 2 E in the REST API R section above
+8. Use the appropriate form input for each question i.e. long_text => textarea
+
+
+
+2. Survey Responses S
+
+The page will be used to show the submitted responses to the questions.
+Requirements R
+1. Fetch the list of submitted responses using Endpoint 3 E in the REST API R section above
+2. The list should be paginated
+3. You should be able to filter the responses using the email_address e
+4. You should be able to download the certificates using the Endpoint 4 E in the REST API R section above
+Add a navigation to be able to switch between the two pages
+
 
 ### Postman collection
-https://lunar-eclipse-852274.postman.co/workspace/New-Team-Workspace~6c1000dc-acb1-4250-a839-f473d8d9db06/collection/15423641-419a1e1e-af3e-4d46-9425-95a287b46c14?action=share&creator=15423641
+1. https://lunar-eclipse-852274.postman.co/workspace/New-Team-Workspace~6c1000dc-acb1-4250-a839-f473d8d9db06/collection/15423641-419a1e1e-af3e-4d46-9425-95a287b46c14?action=share&creator=15423641
+
+
+2. https://www.postman.com/lunar-eclipse-852274/workspace/sky-world/collection/15423641-419a1e1e-af3e-4d46-9425-95a287b46c14
 
 ### Database name as sky_survey_db
 
