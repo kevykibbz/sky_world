@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY =os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     ALLOWED_HOSTS = ['localhost','127.0.0.1','opinion-harbor-6c2c204c10f4.herokuapp.com','www.opinion-harbor-6c2c204c10f4.herokuapp.com']
 else:
@@ -89,11 +89,23 @@ TEMPLATES = [
 WSGI_APPLICATION = 'sky_world.wsgi.application'
 
 
-DATABASES = {
-    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
-}
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+if DEBUG:
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    
+    DATABASES = {
+        'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
+    }
+
 
 
 # Password validation
